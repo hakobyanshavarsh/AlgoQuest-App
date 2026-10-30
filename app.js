@@ -6,9 +6,6 @@ const LESSONS=[
  {id:'selection',title:'Selection Sort',xp:20,desc:'Pick the largest value and place it at the end.',long:'Selection Sort scans the unsorted part to find its largest value, then swaps it into its final place at the end. Time: O(n²) in every case. Space: O(1). It makes very few swaps (at most n-1).'},
  {id:'insertion',title:'Insertion Sort',xp:20,desc:'Grow a sorted section like sorting cards in your hand.',long:'Insertion Sort takes each new value and moves it left past larger neighbours until it fits, like sorting playing cards in your hand. Time: O(n²) average and worst, O(n) best (already sorted). Space: O(1).'}];
 const LVL=xp=>Math.floor(xp/50)+1;
-let store={xp:0,done:{}};
-try{const s=localStorage.getItem('aq');if(s)store=JSON.parse(s)}catch(e){}
-const save=()=>{try{localStorage.setItem('aq',JSON.stringify(store))}catch(e){}};
 const $=s=>document.querySelector(s);
 let timer=null;
 const stop=()=>{clearInterval(timer);timer=null};
@@ -28,13 +25,7 @@ function binaryTrace(a,x){const t=[];let lo=0,hi=a.length-1;
  t.push({lo,hi,m:-1,found:false,txt:'Search space is empty: the target is not in the array.'});return t}
 
 // ---- Routing ----
-function nav(){const r=location.hash.slice(1)||'home';
- $('#nav').innerHTML=[['home','Home'],['dashboard','Dashboard'],['play','Play'],...LESSONS.map(l=>[l.id,l.title])]
-  .map(([k,v])=>`<button class="${k===r?'active':''}" onclick="go('${k}')">${v}</button>`).join('')}
 function go(r){if(location.hash.slice(1)===r)render();else location.hash=r}
-window.onhashchange=render;
-function render(){stop();nav();const r=location.hash.slice(1)||'home';
- if(r==='home')home();else if(r==='dashboard')dash();else if(r==='play')play();else lesson(r);scrollTo(0,0)}
 
 function home(){$('#app').innerHTML=`<div class="card"><h1>Master Algorithms.<br>Level Up Your Skills.</h1>
 <p class="mute">Watch algorithms run step by step, try them yourself, and earn XP for every lesson you finish.</p>
@@ -44,7 +35,7 @@ function home(){$('#app').innerHTML=`<div class="card"><h1>Master Algorithms.<br
 function nextLesson(){return LESSONS.find(l=>!store.done[l.id])||LESSONS[0]}
 
 function dash(){const n=Object.keys(store.done).length,pct=Math.round(n/LESSONS.length*100),nx=nextLesson(),lv=LVL(store.xp);
- $('#app').innerHTML=`<h1>Dashboard</h1><div class="grid">
+ $('#app').innerHTML=`<h1>Welcome, ${esc(profile.display_name)}!</h1><div class="grid">
 <div class="card"><div class="mute">Total XP</div><div class="stat">${store.xp}</div></div>
 <div class="card"><div class="mute">Level</div><div class="stat">${lv}</div><div class="mute">${lv*50-store.xp} XP to next level</div></div>
 <div class="card"><div class="mute">Day streak</div><div class="stat">${store.streak||1}</div></div>
@@ -54,14 +45,9 @@ function dash(){const n=Object.keys(store.done).length,pct=Math.round(n/LESSONS.
 <div class="card"><h2>Badges</h2>${BADGES.map(([n,d,f])=>`<div class="row"><span>${f(store)?'🏅':'🔒'} <b>${n}</b></span><span class="mute">${d}</span></div>`).join('')}</div>
 <div class="card"><h2>Games</h2><div class="mute">${Object.keys(store.games||{}).length} levels cleared · ${Object.values(store.games||{}).reduce((s,x)=>s+x,0)} stars earned</div><div class="row"><button onclick="go('play')">Play games</button></div></div>
 <div class="card"><h2>Lessons</h2>${LESSONS.map(l=>`<div class="row"><span>${store.done[l.id]?'✅':'⬜'} ${l.title}</span><span class="mute">${store.done[l.id]?'Completed '+new Date(store.done[l.id]).toLocaleDateString('en-US'):'+'+l.xp+' XP'}</span></div>`).join('')}</div>
-<p class="mute">Demo note: progress is saved in this browser only. Real accounts and cross-device sync are the next step.</p>`}
+<p class="mute">Your progress is saved to your account and follows you to any device.</p>`}
 
 function finishBox(id){const d=store.done[id];return `<div class="card"><button class="primary" id="fin" ${d?'disabled':''}>${d?'Completed ✓':'Complete lesson'}</button> <span class="msg" id="fmsg"></span></div>`}
-function bindFinish(id,ready){const b=$('#fin');if(!b||b.disabled)return;
- b.onclick=()=>{if(!ready()){$('#fmsg').className='msg err';$('#fmsg').textContent='Finish the activity first.';return}
-  if(store.done[id])return; // reward only once
-  const l=LESSONS.find(x=>x.id===id);store.done[id]=Date.now();store.xp+=l.xp;save();
-  b.disabled=true;b.textContent='Completed ✓';$('#fmsg').className='msg';$('#fmsg').textContent=`+${l.xp} XP earned!`}}
 
 function lesson(id){const l=LESSONS.find(x=>x.id===id);if(!l){$('#app').innerHTML='<div class="card"><h1>Page not found</h1><button onclick="go(\'home\')">Go home</button></div>';return}
  (({binary,stack})[id]||(()=>bubble(id)))()}
@@ -121,7 +107,6 @@ function inv(a){let c=0;for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)
 /** Random permutation of 1..n with at least 3 inversions. @param {number} n */
 function genPuzzle(n,r){r=r||Math.random;let a;do{a=Array.from({length:n},(_,i)=>i+1);for(let i=n-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}while(inv(a)<3);return a}
 /** Award 5 XP per newly earned star (improvements only). Returns XP given. */
-function award(id,stars){store.games=store.games||{};const old=store.games[id]||0;if(stars<=old)return 0;store.games[id]=stars;const xp=(stars-old)*5;store.xp+=xp;save();return xp}
 const starTxt=s=>'★'.repeat(s)+'☆'.repeat(3-s);
 
 function play(){const g=store.games||{};
@@ -195,8 +180,6 @@ function seedOf(){return [...today()].reduce((h,c)=>(h*31+c.charCodeAt(0))|0,7)}
 function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function raceGame(l){swapGame(l,true)}
 const BADGES=[['First Steps','Complete your first lesson',s=>Object.keys(s.done).length>=1],['Scholar','Complete 3 lessons',s=>Object.keys(s.done).length>=3],['Perfect Play','Earn 3 stars in any game level',s=>Object.values(s.games||{}).some(x=>x===3)],['On Fire','Reach a 3-day streak',s=>(s.streak||0)>=3],['XP Hunter','Reach 100 XP',s=>s.xp>=100]];
-// First visit of the day updates the streak (no XP for logging in).
-(function(){const t=today(),y=new Date(Date.now()-864e5).toISOString().slice(0,10);if(store.last!==t){store.streak=store.last===y?(store.streak||0)+1:1;store.last=t;save()}})();
 
 function predictGame(){const N=8;let q=0,ok=0;
  function mk(){const a=Array.from({length:6},()=>1+Math.floor(Math.random()*20)),t=bubbleTrace(a),ix=t.map((s,i)=>i).filter(i=>t[i].cmp.length&&!t[i].swap),s=t[ix[Math.floor(Math.random()*ix.length)]],j=s.cmp[0];return{arr:s.arr,j,sw:s.arr[j]>s.arr[j+1]}}
@@ -224,4 +207,4 @@ function sqGame(lv){lv=lv||1;const isS=lv%2===1,nm=isS?'Stack':'Queue',ops=[],re
   else{tries++;d.className='msg err';d.textContent=isS?'Not yet. A stack is LIFO (last in, first out): pop removes the newest item, so the top is always the latest push.':'Not yet. A queue is FIFO (first in, first out): dequeue removes the oldest item from the front, and new items join the back.'}};
  $('#nxt').onclick=()=>sqGame(lv+1);draw()}
 
-render();
+

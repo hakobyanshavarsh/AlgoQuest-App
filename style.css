@@ -26,3 +26,7 @@ input{font:inherit;min-height:44px;border-radius:12px;border:1px solid var(--lin
 .item{background:var(--pu);border-radius:8px;padding:8px;text-align:center;font-weight:700}
 .msg{min-height:24px;color:var(--cy)}.err{color:var(--bad)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.auth{max-width:440px;margin:0 auto}
+.auth label.f{display:block;margin:10px 0 0;color:var(--mute);font-size:14px}
+.auth input,.auth select{width:100%}
+select{font:inherit;min-height:44px;border-radius:12px;border:1px solid var(--line);background:#0b1020;color:var(--text);padding:0 12px}
